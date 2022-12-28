@@ -156,6 +156,7 @@ async function get_leads(db) {
     } else {
       console.log("error", error);
     }
+    throw error;
   }
   console.timeEnd("get_leads");
   return leadList;
@@ -220,7 +221,9 @@ function get_lead_db_query() {
     customer_type
   FROM leads WHERE
   zoho_deleted is false
-  and zoho_delete_response is null`;
+  and zoho_delete_response is null
+  and converted is false
+  and source_deleted is false`;
 }
 
 async function process_leads() {
@@ -232,7 +235,10 @@ async function process_leads() {
     const dbResultList = await get_lead_db(db);
     const dbLeadList = normalize_db_List(dbResultList);
 
-    const { insertList, updateList } = compare_leads(zohoLeadList, dbLeadList);
+    const { insertList, updateList, deleteList } = compare_leads(
+      zohoLeadList,
+      dbLeadList
+    );
 
     await db.query("BEGIN");
     console.log("insertList.length", insertList.length);
@@ -243,6 +249,11 @@ async function process_leads() {
     if (updateList.length) {
       await update_leads_db(db, updateList);
     }
+
+    console.log("deleteList.length", deleteList.length);
+    if (deleteList.length) {
+      await delete_leads_db(db, deleteList);
+    }
     await db.query("COMMIT");
   } catch (e) {
     await db.query("ROLLBACK");
@@ -251,6 +262,26 @@ async function process_leads() {
     db.release();
   }
   console.timeEnd("process_leads");
+}
+
+async function delete_leads_db(db, leadList){
+  console.time("delete_leads_db");
+  try {
+    for (let index = 0; index < leadList.length; index++) {
+      const lead = leadList[index];
+      const statement = "UPDATE leads SET source_deleted = true where id = $1";
+
+      const updateResult = await db.query(statement, [lead.id]);
+
+      if (updateResult.rowCount == 0) {
+        console.log("error in delete", lead);
+      }
+    }
+  } catch (error) {
+    console.log("delete_leads_db", error);
+    throw error;
+  }
+  console.timeEnd("delete_leads_db");
 }
 
 async function insert_leads_db(db, leadList) {
@@ -280,7 +311,7 @@ function get_insert_obj(lead) {
   let lastPart = " );";
   const values = [];
   for (const key in lead) {
-    firstPart += key + "," ;
+    firstPart += key + ",";
     secondPart += "$" + paramQty + ",";
     values.push(lead[key]);
     paramQty++;
@@ -332,6 +363,7 @@ function compare_leads(zohoLeadList, dbLeadList) {
   console.time("compare_leads");
   const insertList = [];
   const updateList = [];
+  const deleteList = [];
 
   for (let index = 0; index < zohoLeadList.length; index++) {
     const zohoLead = zohoLeadList[index];
@@ -346,8 +378,15 @@ function compare_leads(zohoLeadList, dbLeadList) {
       insertList.push(zohoLead);
     }
   }
+
+  for (let index = 0; index < dbLeadList.length; index++) {
+    const dbLead = dbLeadList[index];
+    const zohoLead = zohoLeadList.find((zohoLead) => zohoLead.id === dbLead.id);
+    if (!zohoLead) deleteList.push(dbLead);
+  }
+
   console.timeEnd("compare_leads");
-  return { insertList, updateList };
+  return { insertList, updateList, deleteList };
 }
 
 function get_diff_in_object(zohoLead, dbLead) {
