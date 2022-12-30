@@ -131,7 +131,7 @@ function get_lead_endpoint({ page_token, page }) {
 
 async function get_leads(db) {
   console.time("get_leads");
-  const maxQuantity = 3;
+  const maxQuantity = 16;
   const leadList = [];
   try {
     let creds = await get_creds(db);
@@ -263,11 +263,11 @@ async function process_leads() {
     console.log("updateList.length", updateList.length);
     if (updateList.length) {
       if(updateList.length > 5){
-        console.log('updateList[0]', updateList[0]);
-        console.log('updateList[1]', updateList[1]);
-        console.log('updateList[2]', updateList[2]);
-        console.log('updateList[3]', updateList[3]);
-        console.log('updateList[4]', updateList[4]);
+        console.log('updateList[updateList.length-1]', updateList[updateList.length-1]);
+        console.log('updateList[updateList.length-2]', updateList[updateList.length-2]);
+        console.log('updateList[updateList.length-3]', updateList[updateList.length-3]);
+        console.log('updateList[updateList.length-4]', updateList[updateList.length-4]);
+        console.log('updateList[updateList.length-5]', updateList[updateList.length-5]);
       }
       //await update_leads_db(db, updateList);
     }
