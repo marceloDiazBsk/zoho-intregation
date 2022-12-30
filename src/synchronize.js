@@ -258,16 +258,16 @@ async function process_leads() {
     await db.query("BEGIN");
     console.log("insertList.length", insertList.length);
     if (insertList.length) {
-      await insert_leads_db(db, insertList);
+      //await insert_leads_db(db, insertList);
     }
     console.log("updateList.length", updateList.length);
     if (updateList.length) {
-      await update_leads_db(db, updateList);
+      //await update_leads_db(db, updateList);
     }
 
     console.log("deleteList.length", deleteList.length);
     if (deleteList.length) {
-      await delete_leads_db(db, deleteList);
+      //await delete_leads_db(db, deleteList);
     }
     await db.query("COMMIT");
   } catch (e) {
@@ -464,5 +464,4 @@ function normalize_db_List(leadList) {
   });
 }
 
-//refresh_token();
 process_leads();
