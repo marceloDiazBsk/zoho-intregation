@@ -131,7 +131,7 @@ function get_lead_endpoint({ page_token, page }) {
 
 async function get_leads(db) {
   console.time("get_leads");
-  const maxQuantity = 16;
+  const maxQuantity = 500;
   const leadList = [];
   try {
     let creds = await get_creds(db);
@@ -258,23 +258,16 @@ async function process_leads() {
     await db.query("BEGIN");
     console.log("insertList.length", insertList.length);
     if (insertList.length) {
-      //await insert_leads_db(db, insertList);
+      await insert_leads_db(db, insertList);
     }
     console.log("updateList.length", updateList.length);
     if (updateList.length) {
-      if(updateList.length > 5){
-        console.log('updateList[updateList.length-1]', updateList[updateList.length-1]);
-        console.log('updateList[updateList.length-2]', updateList[updateList.length-2]);
-        console.log('updateList[updateList.length-3]', updateList[updateList.length-3]);
-        console.log('updateList[updateList.length-4]', updateList[updateList.length-4]);
-        console.log('updateList[updateList.length-5]', updateList[updateList.length-5]);
-      }
-      //await update_leads_db(db, updateList);
+      await update_leads_db(db, updateList);
     }
 
     console.log("deleteList.length", deleteList.length);
     if (deleteList.length) {
-      //await delete_leads_db(db, deleteList);
+      await delete_leads_db(db, deleteList);
     }
     await db.query("COMMIT");
   } catch (e) {
