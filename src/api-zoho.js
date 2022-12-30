@@ -134,19 +134,34 @@ async function get_leads(db) {
   const maxQuantity = 500;
   const leadList = [];
   try {
-    const creds = await get_creds(db);
+    let creds = await get_creds(db);
     if (creds) {
       let continueLoop = true;
       let loopQuantity = 0;
       let page_token = null;
       while (continueLoop && loopQuantity < maxQuantity) {
         console.time("fetch_leads");
-        const response = await get_lead_response({ creds, page_token });
-        leadList.push(...response.data.data);
-        const info = response.data.info;
-        continueLoop = info.more_records;
-        page_token = info.next_page_token;
-        loopQuantity++;
+
+        try {
+          const response = await get_lead_response({ creds, page_token });
+          leadList.push(...response.data.data);
+          const info = response.data.info;
+          continueLoop = info.more_records;
+          page_token = info.next_page_token;
+          loopQuantity++;
+        } catch (internalError) {
+          if (error.response && error.response.data) {
+            if (error.response.data.code === "INVALID_TOKEN") {
+              await refresh_token();
+              creds = await get_creds(db);
+            } else {
+              throw internalError;
+            }
+          } else {
+            throw internalError;
+          }
+        }
+
         console.timeEnd("fetch_leads");
       }
     }
@@ -264,7 +279,7 @@ async function process_leads() {
   console.timeEnd("process_leads");
 }
 
-async function delete_leads_db(db, leadList){
+async function delete_leads_db(db, leadList) {
   console.time("delete_leads_db");
   try {
     for (let index = 0; index < leadList.length; index++) {
@@ -449,6 +464,5 @@ function normalize_db_List(leadList) {
   });
 }
 
-//get_leads();
 //refresh_token();
 process_leads();
