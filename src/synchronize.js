@@ -150,8 +150,8 @@ async function get_leads(db) {
           page_token = info.next_page_token;
           loopQuantity++;
         } catch (internalError) {
-          if (error.response && error.response.data) {
-            if (error.response.data.code === "INVALID_TOKEN") {
+          if (internalError.response && internalError.response.data) {
+            if (internalError.response.data.code === "INVALID_TOKEN") {
               await refresh_token();
               creds = await get_creds(db);
             } else {
