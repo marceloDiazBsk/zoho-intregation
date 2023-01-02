@@ -76,7 +76,7 @@ function get_pool() {
 }
 
 async function refresh_token() {
-  console.log("refresh_token start");
+  log.info("refresh_token start");
 
   const client = await get_pool().connect();
 
@@ -88,7 +88,7 @@ async function refresh_token() {
       if (res.rows && res.rows.length > 0) {
         const result = res.rows[0];
 
-        console.log("result", result);
+        log.info("result ", result);
 
         const response = await axios.post(
           ZOHO_TOKEN_URL,
@@ -105,21 +105,20 @@ async function refresh_token() {
           }
         );
         if (response && response.data) {
-          console.log("response", response.data.access_token);
           const updateResult = await client.query(update, [
             response.data.access_token,
           ]);
           if (updateResult.rowCount != 1) {
-            console.log("No actualizado");
+            log.info("No actualizado");
           }
         }
       }
     }
   } catch (error) {
-    console.log("Entro al catch", error);
+    log.error("Entro al catch", error);
   }
 
-  console.log("refresh_token end");
+  log.info("refresh_token end");
 }
 
 function get_lead_endpoint({ page_token, page }) {
@@ -137,7 +136,8 @@ function get_lead_endpoint({ page_token, page }) {
 }
 
 async function get_leads(db) {
-  console.time("get_leads");
+  const startInMilis = Date.now();
+  log.info("get_leads start");
   const maxQuantity = 500;
   const leadList = [];
   try {
@@ -147,7 +147,7 @@ async function get_leads(db) {
       let loopQuantity = 0;
       let page_token = null;
       while (continueLoop && loopQuantity < maxQuantity) {
-        console.time("fetch_leads");
+        const startInMilisFetch = Date.now();
 
         try {
           const response = await get_lead_response({ creds, page_token });
@@ -169,18 +169,18 @@ async function get_leads(db) {
           }
         }
 
-        console.timeEnd("fetch_leads");
+        log.info("fetch_leads ", Date.now() - startInMilisFetch, " ms");
       }
     }
   } catch (error) {
     if (error.response && error.response.data) {
-      console.log("error.response.data", error.response.data);
+      log.error("error.response.data", error.response.data);
     } else {
-      console.log("error", error);
+      log.error("error", error);
     }
     throw error;
   }
-  console.timeEnd("get_leads");
+  log.info("get_leads end in ", Date.now() - startInMilis, " ms");
   return leadList;
 }
 
@@ -251,7 +251,6 @@ function get_lead_db_query() {
 async function process_leads() {
   const startInMilis = Date.now();
   log.info("process_leads start");
-  console.time("process_leads");
   const db = await get_pool().connect();
   try {
     const zohoResultList = await get_leads(db);
@@ -265,16 +264,16 @@ async function process_leads() {
     );
 
     await db.query("BEGIN");
-    console.log("insertList.length", insertList.length);
+    log.info("insertList.length ", parseFloat(insertList.length));
     if (insertList.length) {
       await insert_leads_db(db, insertList);
     }
-    console.log("updateList.length", updateList.length);
+    log.info("updateList.length ", parseFloat(updateList.length));
     if (updateList.length) {
       await update_leads_db(db, updateList);
     }
 
-    console.log("deleteList.length", deleteList.length);
+    log.info("deleteList.length ", parseFloat(deleteList.length));
     if (deleteList.length) {
       await delete_leads_db(db, deleteList);
     }
@@ -285,12 +284,10 @@ async function process_leads() {
   } finally {
     db.release();
   }
-  console.timeEnd("process_leads");
-  log.info("process_leads end in " + (Date.now() - startInMilis) + " ms");
+  log.info("process_leads end in ", Date.now() - startInMilis, " ms");
 }
 
 async function delete_leads_db(db, leadList) {
-  console.time("delete_leads_db");
   try {
     for (let index = 0; index < leadList.length; index++) {
       const lead = leadList[index];
@@ -299,18 +296,16 @@ async function delete_leads_db(db, leadList) {
       const updateResult = await db.query(statement, [lead.id]);
 
       if (updateResult.rowCount == 0) {
-        console.log("error in delete", lead);
+        log.error("error in delete", lead);
       }
     }
   } catch (error) {
-    console.log("delete_leads_db", error);
+    log.error("delete_leads_db", error);
     throw error;
   }
-  console.timeEnd("delete_leads_db");
 }
 
 async function insert_leads_db(db, leadList) {
-  console.time("insert_leads_db");
   try {
     for (let index = 0; index < leadList.length; index++) {
       const lead = leadList[index];
@@ -319,14 +314,13 @@ async function insert_leads_db(db, leadList) {
       const insertResult = await db.query(statement, values);
 
       if (insertResult.rowCount == 0) {
-        console.log("error in insert", lead);
+        log.error("error in insert", lead);
       }
     }
   } catch (error) {
-    console.log("insert_leads_db", error);
+    log.error("insert_leads_db", error);
     throw error;
   }
-  console.timeEnd("insert_leads_db");
 }
 
 function get_insert_obj(lead) {
@@ -348,7 +342,6 @@ function get_insert_obj(lead) {
 }
 
 async function update_leads_db(db, leadList) {
-  console.time("update_leads_db");
   try {
     for (let index = 0; index < leadList.length; index++) {
       const lead = leadList[index];
@@ -357,14 +350,13 @@ async function update_leads_db(db, leadList) {
       const updateResult = await db.query(statement, values);
 
       if (updateResult.rowCount == 0) {
-        console.log("error in update", lead);
+        log.error("error in update", lead);
       }
     }
   } catch (error) {
-    console.log("update_leads_db", error);
+    log.error("update_leads_db", error);
     throw error;
   }
-  console.timeEnd("update_leads_db");
 }
 
 function get_update_obj(lead) {
@@ -385,7 +377,8 @@ function get_update_obj(lead) {
 }
 
 function compare_leads(zohoLeadList, dbLeadList) {
-  console.time("compare_leads");
+  const startInMilis = Date.now();
+  log.info("compare_leads start");
   const insertList = [];
   const updateList = [];
   const deleteList = [];
@@ -410,7 +403,7 @@ function compare_leads(zohoLeadList, dbLeadList) {
     if (!zohoLead) deleteList.push(dbLead);
   }
 
-  console.timeEnd("compare_leads");
+  log.info("compare_leads end in ", Date.now() - startInMilis, " ms");
   return { insertList, updateList, deleteList };
 }
 
@@ -475,3 +468,4 @@ function normalize_db_List(leadList) {
 }
 
 process_leads();
+process.exitCode = 1;
