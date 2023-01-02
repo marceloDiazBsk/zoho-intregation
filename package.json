@@ -5,6 +5,7 @@
     "lodash": "^4.17.21",
     "moment": "^2.29.4",
     "pg": "^8.8.0",
-    "querystring": "^0.2.1"
+    "querystring": "^0.2.1",
+    "simple-node-logger": "^21.8.12"
   }
 }

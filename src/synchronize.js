@@ -4,6 +4,13 @@ const dotenv = require("dotenv");
 const querystring = require("querystring");
 const moment = require("moment");
 const lodash = require("lodash");
+const opts = {
+  errorEventName: "error",
+  logDirectory: "logs", // NOTE: folder must exist and be writable...
+  fileNamePattern: "<DATE>.log",
+  dateFormat: "YYYY.MM.DD",
+};
+const log = require("simple-node-logger").createRollingFileLogger(opts);
 
 dotenv.config();
 
@@ -242,6 +249,8 @@ function get_lead_db_query() {
 }
 
 async function process_leads() {
+  const startInMilis = Date.now();
+  log.info("process_leads start");
   console.time("process_leads");
   const db = await get_pool().connect();
   try {
@@ -277,6 +286,7 @@ async function process_leads() {
     db.release();
   }
   console.timeEnd("process_leads");
+  log.info("process_leads end in " + (Date.now() - startInMilis) + " ms");
 }
 
 async function delete_leads_db(db, leadList) {
