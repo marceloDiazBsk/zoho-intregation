@@ -279,7 +279,7 @@ async function process_leads() {
   } finally {
     db.release();
   }
-  logger.info("process_leads end in", Date.now() - startInMilis, " ms");
+  logger.info("process_leads end in", Date.now() - startInMilis, "ms");
 }
 
 async function delete_leads_db(db, leadList) {
