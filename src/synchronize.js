@@ -1,16 +1,11 @@
-const { default: axios } = require("axios");
-const { Client, Pool } = require("pg");
-const dotenv = require("dotenv");
-const querystring = require("querystring");
-const moment = require("moment");
-const lodash = require("lodash");
-const opts = {
-  errorEventName: "error",
-  logDirectory: "logs", // NOTE: folder must exist and be writable...
-  fileNamePattern: "<DATE>.log",
-  dateFormat: "YYYY.MM.DD",
-};
-const log = require("simple-node-logger").createRollingFileLogger(opts);
+import axios from "axios";
+import pkg from 'pg';
+const { Client, Pool } = pkg;
+import dotenv from "dotenv";
+import querystring from "querystring";
+import moment from "moment";
+import lodash from "lodash";
+import logger from "./logger.js";
 
 dotenv.config();
 
@@ -76,7 +71,7 @@ function get_pool() {
 }
 
 async function refresh_token() {
-  log.info("refresh_token start");
+  logger.info("refresh_token start");
 
   const client = await get_pool().connect();
 
@@ -88,7 +83,7 @@ async function refresh_token() {
       if (res.rows && res.rows.length > 0) {
         const result = res.rows[0];
 
-        log.info("result ", result);
+        logger.info("result ", result);
 
         const response = await axios.post(
           ZOHO_TOKEN_URL,
@@ -115,10 +110,10 @@ async function refresh_token() {
       }
     }
   } catch (error) {
-    log.error("Entro al catch", error);
+    logger.error("Entro al catch", error);
   }
 
-  log.info("refresh_token end");
+  logger.info("refresh_token end");
 }
 
 function get_lead_endpoint({ page_token, page }) {
@@ -137,7 +132,7 @@ function get_lead_endpoint({ page_token, page }) {
 
 async function get_leads(db) {
   const startInMilis = Date.now();
-  log.info("get_leads start");
+  logger.info("get_leads start");
   const maxQuantity = 500;
   const leadList = [];
   try {
@@ -169,18 +164,18 @@ async function get_leads(db) {
           }
         }
 
-        log.info("fetch_leads ", Date.now() - startInMilisFetch, " ms");
+        logger.info("fetch_leads ", Date.now() - startInMilisFetch, " ms");
       }
     }
   } catch (error) {
     if (error.response && error.response.data) {
-      log.error("error.response.data", error.response.data);
+      logger.error("error.response.data", error.response.data);
     } else {
-      log.error("error", error);
+      logger.error("error", error);
     }
     throw error;
   }
-  log.info("get_leads end in ", Date.now() - startInMilis, " ms");
+  logger.info("get_leads end in ", Date.now() - startInMilis, " ms");
   return leadList;
 }
 
@@ -250,7 +245,7 @@ function get_lead_db_query() {
 
 async function process_leads() {
   const startInMilis = Date.now();
-  log.info("process_leads start");
+  logger.info("process_leads start");
   const db = await get_pool().connect();
   try {
     const zohoResultList = await get_leads(db);
@@ -264,16 +259,16 @@ async function process_leads() {
     );
 
     await db.query("BEGIN");
-    log.info("insertList.length ", parseFloat(insertList.length));
+    logger.info("insertList.length ", parseFloat(insertList.length));
     if (insertList.length) {
       await insert_leads_db(db, insertList);
     }
-    log.info("updateList.length ", parseFloat(updateList.length));
+    logger.info("updateList.length ", parseFloat(updateList.length));
     if (updateList.length) {
       await update_leads_db(db, updateList);
     }
 
-    log.info("deleteList.length ", parseFloat(deleteList.length));
+    logger.info("deleteList.length ", parseFloat(deleteList.length));
     if (deleteList.length) {
       await delete_leads_db(db, deleteList);
     }
@@ -284,7 +279,7 @@ async function process_leads() {
   } finally {
     db.release();
   }
-  log.info("process_leads end in ", Date.now() - startInMilis, " ms");
+  logger.info("process_leads end in ", Date.now() - startInMilis, " ms");
 }
 
 async function delete_leads_db(db, leadList) {
@@ -296,11 +291,11 @@ async function delete_leads_db(db, leadList) {
       const updateResult = await db.query(statement, [lead.id]);
 
       if (updateResult.rowCount == 0) {
-        log.error("error in delete", lead);
+        logger.error("error in delete", lead);
       }
     }
   } catch (error) {
-    log.error("delete_leads_db", error);
+    logger.error("delete_leads_db", error);
     throw error;
   }
 }
@@ -314,11 +309,11 @@ async function insert_leads_db(db, leadList) {
       const insertResult = await db.query(statement, values);
 
       if (insertResult.rowCount == 0) {
-        log.error("error in insert", lead);
+        logger.error("error in insert", lead);
       }
     }
   } catch (error) {
-    log.error("insert_leads_db", error);
+    logger.error("insert_leads_db", error);
     throw error;
   }
 }
@@ -350,11 +345,11 @@ async function update_leads_db(db, leadList) {
       const updateResult = await db.query(statement, values);
 
       if (updateResult.rowCount == 0) {
-        log.error("error in update", lead);
+        logger.error("error in update", lead);
       }
     }
   } catch (error) {
-    log.error("update_leads_db", error);
+    logger.error("update_leads_db", error);
     throw error;
   }
 }
@@ -378,7 +373,7 @@ function get_update_obj(lead) {
 
 function compare_leads(zohoLeadList, dbLeadList) {
   const startInMilis = Date.now();
-  log.info("compare_leads start");
+  logger.info("compare_leads start");
   const insertList = [];
   const updateList = [];
   const deleteList = [];
@@ -403,7 +398,7 @@ function compare_leads(zohoLeadList, dbLeadList) {
     if (!zohoLead) deleteList.push(dbLead);
   }
 
-  log.info("compare_leads end in ", Date.now() - startInMilis, " ms");
+  logger.info("compare_leads end in ", Date.now() - startInMilis, " ms");
   return { insertList, updateList, deleteList };
 }
 
@@ -468,4 +463,3 @@ function normalize_db_List(leadList) {
 }
 
 process_leads();
-process.exitCode = 1;
