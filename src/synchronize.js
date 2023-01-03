@@ -1,11 +1,12 @@
 import axios from "axios";
-import pkg from 'pg';
+import pkg from "pg";
 const { Client, Pool } = pkg;
 import dotenv from "dotenv";
 import querystring from "querystring";
 import moment from "moment";
 import lodash from "lodash";
 import logger from "./logger.js";
+import save_integration from "./integration.js";
 
 dotenv.config();
 
@@ -271,6 +272,17 @@ async function process_leads() {
       await delete_leads_db(db, deleteList);
     }
 
+    const durationInMilis = Date.now() - startInMilis;
+    logger.info("process_leads end in", durationInMilis, "ms");
+
+    save_integration(
+      db,
+      "leads",
+      durationInMilis,
+      insertList.length,
+      updateList.length,
+      deleteList.length
+    );
     
     await db.query("COMMIT");
   } catch (e) {
@@ -279,7 +291,6 @@ async function process_leads() {
   } finally {
     db.release();
   }
-  logger.info("process_leads end in", Date.now() - startInMilis, "ms");
 }
 
 async function delete_leads_db(db, leadList) {
@@ -462,7 +473,7 @@ function normalize_db_List(leadList) {
   });
 }
 
-async function work(){
+async function work() {
   await process_leads();
 }
 
