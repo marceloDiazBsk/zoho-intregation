@@ -70,15 +70,13 @@ function get_pool() {
   });
 }
 
-async function refresh_token() {
+async function refresh_token(db) {
   logger.info("refresh_token start");
-
-  const client = await get_pool().connect();
 
   try {
     const query = "SELECT access_token, refresh_token FROM zoho_creds;";
     const update = "UPDATE public.zoho_creds SET access_token=$1";
-    const res = await client.query(query);
+    const res = await db.query(query);
     if (res) {
       if (res.rows && res.rows.length > 0) {
         const result = res.rows[0];
@@ -100,7 +98,7 @@ async function refresh_token() {
           }
         );
         if (response && response.data) {
-          const updateResult = await client.query(update, [
+          const updateResult = await db.query(update, [
             response.data.access_token,
           ]);
           if (updateResult.rowCount != 1) {
@@ -154,7 +152,7 @@ async function get_leads(db) {
         } catch (internalError) {
           if (internalError.response && internalError.response.data) {
             if (internalError.response.data.code === "INVALID_TOKEN") {
-              await refresh_token();
+              await refresh_token(db);
               creds = await get_creds(db);
             } else {
               throw internalError;
