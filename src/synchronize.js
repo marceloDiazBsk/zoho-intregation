@@ -83,7 +83,7 @@ async function refresh_token() {
       if (res.rows && res.rows.length > 0) {
         const result = res.rows[0];
 
-        logger.info("result ", result);
+        logger.info("result", result);
 
         const response = await axios.post(
           ZOHO_TOKEN_URL,
@@ -164,7 +164,7 @@ async function get_leads(db) {
           }
         }
 
-        logger.info("fetch_leads ", Date.now() - startInMilisFetch, " ms");
+        logger.info("fetch_leads", Date.now() - startInMilisFetch, "ms");
       }
     }
   } catch (error) {
@@ -175,7 +175,7 @@ async function get_leads(db) {
     }
     throw error;
   }
-  logger.info("get_leads end in ", Date.now() - startInMilis, " ms");
+  logger.info("get_leads end in", Date.now() - startInMilis, "ms");
   return leadList;
 }
 
@@ -259,16 +259,16 @@ async function process_leads() {
     );
 
     await db.query("BEGIN");
-    logger.info("insertList.length ", parseFloat(insertList.length));
+    logger.info("insertList.length", parseFloat(insertList.length));
     if (insertList.length) {
       await insert_leads_db(db, insertList);
     }
-    logger.info("updateList.length ", parseFloat(updateList.length));
+    logger.info("updateList.length", parseFloat(updateList.length));
     if (updateList.length) {
       await update_leads_db(db, updateList);
     }
 
-    logger.info("deleteList.length ", parseFloat(deleteList.length));
+    logger.info("deleteList.length", parseFloat(deleteList.length));
     if (deleteList.length) {
       await delete_leads_db(db, deleteList);
     }
@@ -279,7 +279,7 @@ async function process_leads() {
   } finally {
     db.release();
   }
-  logger.info("process_leads end in ", Date.now() - startInMilis, " ms");
+  logger.info("process_leads end in", Date.now() - startInMilis, " ms");
 }
 
 async function delete_leads_db(db, leadList) {
@@ -398,7 +398,7 @@ function compare_leads(zohoLeadList, dbLeadList) {
     if (!zohoLead) deleteList.push(dbLead);
   }
 
-  logger.info("compare_leads end in ", Date.now() - startInMilis, " ms");
+  logger.info("compare_leads end in", Date.now() - startInMilis, "ms");
   return { insertList, updateList, deleteList };
 }
 
@@ -462,4 +462,8 @@ function normalize_db_List(leadList) {
   });
 }
 
-process_leads();
+async function work(){
+  await process_leads();
+}
+
+work();
