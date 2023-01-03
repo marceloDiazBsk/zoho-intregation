@@ -15,7 +15,7 @@ async function save_integration(
     const insertStatement =
       "INSERT INTO public.integrations(date, module, insert_quantity, delete_quantity, update_quantity, process_duration) VALUES ($1, $2, $3, $4, $5, $6);";
     const values = [
-      moment().format('YYYY-MM-DD hh:mm:ss'),
+      moment().format('YYYY-MM-DD HH:mm:ss'),
       module,
       insertQty,
       deleteQty,
