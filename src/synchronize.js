@@ -272,6 +272,8 @@ async function process_leads() {
     if (deleteList.length) {
       await delete_leads_db(db, deleteList);
     }
+
+    
     await db.query("COMMIT");
   } catch (e) {
     await db.query("ROLLBACK");
