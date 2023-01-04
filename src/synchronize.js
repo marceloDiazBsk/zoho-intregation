@@ -244,13 +244,16 @@ function get_lead_db_query() {
 
 async function process_leads() {
   const startInMilis = Date.now();
-  logger.info("process_leads start");
+  logger.info("===============process_leads start===============");
   const db = await get_pool().connect();
   try {
     const zohoResultList = await get_leads(db);
     const zohoLeadList = normalize_zoho_list(zohoResultList);
     const dbResultList = await get_lead_db(db);
     const dbLeadList = normalize_db_List(dbResultList);
+
+    logger.info("zohoLeadList.length", zohoLeadList.length);
+    logger.info("dbLeadList.length", dbLeadList.length);
 
     const { insertList, updateList, deleteList } = compare_leads(
       zohoLeadList,
@@ -273,7 +276,12 @@ async function process_leads() {
     }
 
     const durationInMilis = Date.now() - startInMilis;
-    logger.info("process_leads end in", durationInMilis, "ms");
+    logger.info(
+      "===============process_leads end in",
+      durationInMilis,
+      "ms",
+      "==============="
+    );
 
     save_integration(
       db,
@@ -283,7 +291,7 @@ async function process_leads() {
       updateList.length,
       deleteList.length
     );
-    
+
     await db.query("COMMIT");
   } catch (e) {
     await db.query("ROLLBACK");
