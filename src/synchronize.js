@@ -255,6 +255,13 @@ async function process_leads() {
     logger.info("zohoLeadList.length", zohoLeadList.length);
     logger.info("dbLeadList.length", dbLeadList.length);
 
+    if(zohoLeadList.length > 4){
+      logger.info('zohoLeadList[0]',zohoLeadList[0]);
+      logger.info('zohoLeadList[1]',zohoLeadList[1]);
+      logger.info('zohoLeadList[2]',zohoLeadList[2]);
+      logger.info('zohoLeadList[3]',zohoLeadList[3]);
+    }
+
     const { insertList, updateList, deleteList } = compare_leads(
       zohoLeadList,
       dbLeadList
