@@ -239,7 +239,8 @@ function get_lead_db_query() {
   zoho_deleted is false
   and zoho_delete_response is null
   and converted is false
-  and source_deleted is false`;
+  and source_deleted is false
+  order by id desc`;
 }
 
 async function process_leads() {
@@ -254,13 +255,6 @@ async function process_leads() {
 
     logger.info("zohoLeadList.length", zohoLeadList.length);
     logger.info("dbLeadList.length", dbLeadList.length);
-
-    if(zohoLeadList.length > 4){
-      logger.info('zohoLeadList[0]',zohoLeadList[0]);
-      logger.info('zohoLeadList[1]',zohoLeadList[1]);
-      logger.info('zohoLeadList[2]',zohoLeadList[2]);
-      logger.info('zohoLeadList[3]',zohoLeadList[3]);
-    }
 
     const { insertList, updateList, deleteList } = compare_leads(
       zohoLeadList,
@@ -279,6 +273,11 @@ async function process_leads() {
 
     logger.info("deleteList.length", parseFloat(deleteList.length));
     if (deleteList.length) {
+      if (deleteList.length > 100) {
+        logger.info("zohoLeadList", JSON.stringify(zohoLeadList.slice(0,200)));
+        logger.info("dbLeadList", JSON.stringify(dbLeadList.slice(0,200)));
+        throw new Error("Delete qty is too much");
+      }
       await delete_leads_db(db, deleteList);
     }
 
