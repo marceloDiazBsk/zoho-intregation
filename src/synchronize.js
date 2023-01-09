@@ -274,8 +274,8 @@ async function process_leads() {
     logger.info("deleteList.length", parseFloat(deleteList.length));
     if (deleteList.length) {
       if (deleteList.length > 100) {
-        logger.info("zohoLeadList", JSON.stringify(zohoLeadList.slice(0, 200)));
-        logger.info("dbLeadList", JSON.stringify(dbLeadList.slice(0, 200)));
+        //logger.info("zohoLeadList", JSON.stringify(zohoLeadList.slice(0, 200)));
+        //logger.info("dbLeadList", JSON.stringify(dbLeadList.slice(0, 200)));
         throw new Error("Delete qty is too much");
       }
       await delete_leads_db(db, deleteList);
