@@ -10,7 +10,7 @@ import fs from 'fs';
 dotenv.config();
 
 const ZOHO_TOKEN_URL = "https://accounts.zoho.com/oauth/v2/token";
-const ZOHO_LEADS_URL = "https://www.zohoapis.com/crm/v4/Leads";
+const ZOHO_LEADS_URL = "https://www.zohoapis.com/crm/v3/Leads";
 
 const fieldList = [
   { label: "Id", value: "id", name: "id" },
@@ -114,7 +114,7 @@ async function process_leads() {
 
     logger.info('zohoResultList.length', zohoResultList.length);
 
-    fs.writeFileSync('./leads.json', JSON.stringify(zohoResultList));
+    //fs.writeFileSync('./leads.json', JSON.stringify(zohoResultList));
 
     await db.query("COMMIT");
   } catch (e) {
@@ -129,7 +129,7 @@ async function process_leads() {
 async function get_leads(db) {
   const startInMilis = Date.now();
   logger.info("get_leads start");
-  const maxQuantity = 500;
+  const maxQuantity = 1;
   const leadList = [];
   try {
     let creds = await get_creds(db);
