@@ -10,7 +10,7 @@ import fs from 'fs';
 dotenv.config();
 
 const ZOHO_TOKEN_URL = "https://accounts.zoho.com/oauth/v2/token";
-const ZOHO_LEADS_URL = "https://www.zohoapis.com/crm/v3/Leads";
+const ZOHO_LEADS_URL = "https://www.zohoapis.com/crm/v4/Leads";
 
 const fieldList = [
   { label: "Id", value: "id", name: "id" },
