@@ -29,7 +29,7 @@ function compare_lists(sourceList, targeList) {
     const sourceItem = sourceList.find(
       (sourceItem) => sourceItem.id === targetItem.id
     );
-    if (!sourceItem) deleteList.push(sourceItem);
+    if (!sourceItem) deleteList.push(targetItem);
   }
 
   logger.info("compare_lists end in", Date.now() - startInMilis, "ms");
