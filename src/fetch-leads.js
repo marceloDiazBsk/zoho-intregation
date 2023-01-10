@@ -5,10 +5,12 @@ import lodash from "lodash";
 import logger from "./logger.js";
 import pkg from "pg";
 const { Client, Pool } = pkg;
+import fs from 'fs';
+
 dotenv.config();
 
 const ZOHO_TOKEN_URL = "https://accounts.zoho.com/oauth/v2/token";
-const ZOHO_LEADS_URL = "https://www.zohoapis.com/crm/v4/Leads";
+const ZOHO_LEADS_URL = "https://www.zohoapis.com/crm/v3/Leads";
 
 const fieldList = [
   { label: "Id", value: "id", name: "id" },
@@ -108,7 +110,12 @@ async function process_leads() {
   const db = await get_pool().connect();
   try {
     const zohoResultList = await get_leads(db);
+
+
     logger.info('zohoResultList.length', zohoResultList.length);
+
+    fs.writeFileSync('./leads.json', JSON.stringify(zohoResultList));
+
     await db.query("COMMIT");
   } catch (e) {
     logger.error("Error in process_leads", e);
