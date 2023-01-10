@@ -11,14 +11,14 @@ async function integrate() {
   const db = await get_pool().connect();
   try {
     await db.query("BEGIN");
-    
+
     await synchronize_user(db);
 
     await db.query("COMMIT");
 
     const durationInMilis = Date.now() - startInMilis;
     logger.info(
-      "===============process_leads end in",
+      "===============integrate end in",
       durationInMilis,
       "ms",
       "==============="

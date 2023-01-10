@@ -1,3 +1,4 @@
+import lodash from "lodash";
 import logger from "../logger.js";
 
 function compare_lists(sourceList, targeList) {
@@ -51,19 +52,16 @@ async function insert_model_db(db, itemList, tableName) {
   try {
     for (let index = 0; index < itemList.length; index++) {
       const item = itemList[index];
-      console.log('item', item);
       const { statement, values } = get_insert_model(item, tableName);
-      console.log('statement', statement);
-      logger.info('statement', statement);
 
       const insertResult = await db.query(statement, values);
 
       if (insertResult.rowCount == 0) {
-        logger.error("error in insert", lead);
+        logger.error("error in insert_model_db", item);
       }
     }
   } catch (error) {
-    logger.error("insert_leads_db", error);
+    logger.error("insert_model_db", error);
     throw error;
   }
 }
@@ -86,4 +84,58 @@ function get_insert_model(item, tableName) {
   return { statement, values };
 }
 
-export { compare_lists, insert_model_db };
+async function update_model_db(db, itemList, tableName) {
+  try {
+    for (let index = 0; index < itemList.length; index++) {
+      const item = itemList[index];
+      const { statement, values } = get_update_model(item, tableName);
+
+      const updateResult = await db.query(statement, values);
+
+      if (updateResult.rowCount == 0) {
+        logger.error("error in update", item);
+      }
+    }
+  } catch (error) {
+    logger.error("update_model_db", error);
+    throw error;
+  }
+}
+
+function get_update_model(item, tableName) {
+  let paramQty = 1;
+  let statement = "UPDATE " + tableName + " SET ";
+  const values = [];
+  for (const key in item) {
+    if (key !== "id") {
+      statement += key + " = $" + paramQty + ",";
+      values.push(item[key]);
+      paramQty++;
+    }
+  }
+  statement = statement.substring(0, statement.length - 1);
+  statement += " WHERE id = $" + paramQty;
+  values.push(item.id);
+  return { statement, values };
+}
+
+async function delete_model_db(db, itemList, tableName) {
+  try {
+    for (let index = 0; index < itemList.length; index++) {
+      const item = itemList[index];
+      const statement =
+        "UPDATE " + tableName + " SET source_deleted = true where id = $1";
+
+      const updateResult = await db.query(statement, [item.id]);
+
+      if (updateResult.rowCount == 0) {
+        logger.error("error in delete_model_db", item);
+      }
+    }
+  } catch (error) {
+    logger.error("delete_model_db", error);
+    throw error;
+  }
+}
+
+export { compare_lists, insert_model_db, update_model_db, delete_model_db };

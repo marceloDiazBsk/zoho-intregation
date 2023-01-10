@@ -5,7 +5,13 @@ import dotenv from "dotenv";
 import querystring from "querystring";
 import { refresh_token, get_creds } from "../api/api.js";
 import logger from "../logger.js";
-import { compare_lists, insert_model_db } from "../util/util.js";
+import {
+  compare_lists,
+  insert_model_db,
+  update_model_db,
+  delete_model_db,
+} from "../util/util.js";
+import save_integration from "../integration.js";
 
 dotenv.config();
 
@@ -36,59 +42,39 @@ async function synchronize_user(db) {
     );
 
     logger.info("insertList.length", parseFloat(insertList.length));
-    //console.log('insertList', insertList);
     if (insertList.length) {
-      await insert_model_db(db, insertList, 'users');
+      await insert_model_db(db, insertList, "users");
     }
 
     logger.info("updateList.length", parseFloat(updateList.length));
     if (updateList.length) {
-      //await update_leads_db(db, updateList);
-    }
-
-    /*
-    logger.info("insertList.length", parseFloat(insertList.length));
-    if (insertList.length) {
-      await insert_leads_db(db, insertList);
-    }
-    logger.info("updateList.length", parseFloat(updateList.length));
-    if (updateList.length) {
-      await update_leads_db(db, updateList);
+      await update_model_db(db, updateList, "users");
     }
 
     logger.info("deleteList.length", parseFloat(deleteList.length));
     if (deleteList.length) {
       if (deleteList.length > 100) {
-        //logger.info("zohoLeadList", JSON.stringify(zohoLeadList.slice(0, 200)));
-        //logger.info("dbLeadList", JSON.stringify(dbLeadList.slice(0, 200)));
         throw new Error("Delete qty is too much");
       }
-      await delete_leads_db(db, deleteList);
+      await delete_model_db(db, deleteList);
     }
 
     const durationInMilis = Date.now() - startInMilis;
-    logger.info(
-      "===============process_leads end in",
-      durationInMilis,
-      "ms",
-      "==============="
-    );
 
-    save_integration(
-      db,
-      "leads",
-      durationInMilis,
-      insertList.length,
-      updateList.length,
-      deleteList.length
-    );*/
-
-    const durationInMilis = Date.now() - startInMilis;
     logger.info(
       "===============synchronize_user end in",
       durationInMilis,
       "ms",
       "==============="
+    );
+    
+    save_integration(
+      db,
+      "users",
+      durationInMilis,
+      insertList.length,
+      updateList.length,
+      deleteList.length
     );
   } catch (e) {
     logger.error("Error in synchronize_user", e);
@@ -194,7 +180,6 @@ function normalize_zoho_list(userList) {
     fieldList.forEach((field) => {
       newItem[field.name] = item[field.value];
     });
-    console.log('newItem', newItem);
     return newItem;
   });
 }
