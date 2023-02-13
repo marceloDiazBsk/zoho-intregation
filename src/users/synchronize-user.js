@@ -12,6 +12,7 @@ import {
   delete_model_db,
 } from "../util/util.js";
 import save_integration from "../integration.js";
+import lodash from "lodash";
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ const fieldList = [
   { label: "email", value: "email", name: "email" },
   { label: "full_name", value: "full_name", name: "full_name" },
   { label: "status", value: "status", name: "status" },
+  { label: "role", value: "role", name: "role" },
 ];
 
 async function synchronize_user(db) {
@@ -67,7 +69,7 @@ async function synchronize_user(db) {
       "ms",
       "==============="
     );
-    
+
     save_integration(
       db,
       "users",
@@ -178,7 +180,19 @@ function normalize_zoho_list(userList) {
   return userList.map((item) => {
     const newItem = {};
     fieldList.forEach((field) => {
-      newItem[field.name] = item[field.value];
+      if (lodash.isObject(item[field.value])) {
+        if (!lodash.isArray(item[field.value])) {
+          newItem[field.name] = item[field.value].id;
+        } else {
+          if (lodash.isEmpty(item[field.value])) {
+            newItem[field.name] = null;
+          } else {
+            newItem[field.name] = JSON.stringify(item[field.value]);
+          }
+        }
+      } else {
+        newItem[field.name] = item[field.value];
+      }
     });
     return newItem;
   });
