@@ -1,6 +1,7 @@
 import pkg from "pg";
 import { synchronize_leads } from "./leads/synchronize-lead.js";
 import logger from "./logger.js";
+import { synchronize_role } from "./roles/synchronize-role.js";
 import { synchronize_user } from "./users/synchronize-user.js";
 const { Client, Pool } = pkg;
 
@@ -13,8 +14,9 @@ async function integrate() {
   try {
     await db.query("BEGIN");
 
-    await synchronize_user(db);
-    await synchronize_leads(db);
+    //await synchronize_user(db);
+    //await synchronize_leads(db);
+    await synchronize_role(db);
 
     await db.query("COMMIT");
 
