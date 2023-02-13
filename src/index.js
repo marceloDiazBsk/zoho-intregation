@@ -14,8 +14,8 @@ async function integrate() {
   try {
     await db.query("BEGIN");
 
-    //await synchronize_user(db);
-    //await synchronize_leads(db);
+    await synchronize_user(db);
+    await synchronize_leads(db);
     await synchronize_role(db);
 
     await db.query("COMMIT");

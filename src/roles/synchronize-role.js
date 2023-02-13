@@ -29,7 +29,6 @@ async function synchronize_role(db) {
   try {
     const zohoResultList = await get_roles(db);
     const zohoRoleList = normalize_zoho_list(zohoResultList);
-    console.log('zohoRoleList', zohoRoleList);
     const dbRoleList = await get_role_db(db);
 
     logger.info("zohoRoleList.length", zohoRoleList.length);
